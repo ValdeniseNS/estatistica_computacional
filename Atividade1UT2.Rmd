@@ -1,0 +1,421 @@
+---
+title: "Exercícios 1 - UT2"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+
+```{r, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+options(tinytex.verbose = TRUE)
+
+
+```
+
+
+## Escolha 4 integrais definidas, 2 no intervalo 0 a 1 e duas em um intervalo quaisquer e apresentar os resultados no método de monte carlo e o método analítico (integrate). Para as integrais definidas no intervalo qualquer, apresentar a operação de substituição. 
+
+Resolução: 
+
+\section*{Integral 1: Esperança da Uniforme(0,1)}
+
+\[
+\theta_1  = E[X] =  \int_0^1 x \, dx = \frac{1}{2}.
+\]
+
+Monte Carlo:
+> Como $X \sim \text{Uniforme}(0, 1)$, basta gerar amostras $x_1, x_2, ..., x_n \, \text{Uniforme}(0, 1)$ e tirar a média.
+
+
+\textbf{Algoritmo do Método de Monte Carlo:}
+
+```{r}
+# Estimando a integral de e^{-y} por Monte Carlo
+n <- 10000
+u <- runif(n)
+theta1 <- mean(u)
+
+
+# Resultado
+cat("Monte Carlo - Integral 1:", theta1, "\n")
+
+```
+
+
+ Método analítico - Código R:
+ 
+```{r}
+# Função f(x) = x
+f <- function(x) x
+
+theta1_analitico <- integrate(f, lower = 0, upper = 1)
+
+# Resultado
+cat("Analítico - Integral 1:", theta1_analitico$value, "\n")
+
+
+```
+Gráfico
+
+ 
+```{r}
+
+# Intervalo de integração
+x <- seq(0, 1, length.out = 1000)
+y <- f(x)
+
+# Plotando a função
+plot(x, y, type = "l", lwd = 2, col = "blue",
+     main = "Área sob f(x) = x",
+     xlab = "x", ylab = "f(x)")
+
+# Adicionando uma linha de grade
+grid()
+
+# Preenchendo a área sob a curva
+polygon(c(0, x, 1), c(0, y, 0), col = "lightblue", border = NA)
+
+# Segmentos verticais nos limites da integral
+segments(x0 = 0, y0 = 0, x1 = 0, y1 = f(0), col = "red", lty = 2)
+segments(x0 = 1, y0 = 0, x1 = 1, y1 = f(1), col = "red", lty = 2)
+
+# Linha horizontal no eixo x
+abline(h = 0, col = "black")
+```
+
+
+
+\section*{Integral 2: Integral da função arco-tangente (ou inversa da tangente).}
+
+\[
+\theta_2 = \int_0^1 \frac{1}{1 + x^2} \, dx
+\]
+
+\textbf{Algoritmo do Método de Monte Carlo:}
+
+```{r}
+# Estimando a integral por Monte Carlo
+n <- 10000
+u <- runif(n)
+g <- 1 / (1 + u^2)
+theta2 <- mean(g)
+
+
+# Resultado
+cat("Monte Carlo - Integral 2:", theta2, "\n")
+
+```
+
+Método Analítico:
+
+
+ Sabemos que a derivada da função $\arctan(x)$ é:
+  \[
+  \frac{d}{dx} \left( \arctan(x) \right) = \frac{1}{1 + x^2}.
+  \]
+ Logo, a integral definida de \(0\) a \(1\) pode ser escrita como:
+
+
+\begin{align*}
+\int_0^1 \frac{1}{1 + x^2} \, dx &= \left[ \arctan(x) \right]_0^1 \\
+&= \arctan(1) - \arctan(0) = \frac{\pi}{4} - 0 = \frac{\pi}{4}.
+\end{align*}
+
+Código R:
+
+```{r}
+
+# Define a função 
+f <- function(x) {
+  1 / (1 + x^2)
+}
+
+# Usa a função integrate() para calcular a integral de 0 a 1
+theta2_resultado <- integrate(f, lower = 0, upper = 1)
+
+# Resultado
+cat("Resultado da integral com integrate():", theta2_resultado$value, "\n")
+
+
+```
+Gráfico - Código R:
+
+```{r}
+
+# Criando uma sequência de x de 0 a 1
+x <- seq(0, 1, length.out = 1000)
+y <- f(x)
+
+# Plotando a função
+plot(x, y, type = "l", lwd = 2, col = "blue",
+     main = " Integral da função arco-tangente ",
+     xlab = "x", ylab = "f(x) = 1 / (1 + x^2)")
+
+# Preenchendo a área sob a curva
+polygon(c(0, x, 1), c(0, y, 0), col = "lightblue", border = NA)
+
+# Adicionando uma linha de grade
+grid()
+
+# Segmentos verticais nas extremidades da integral
+segments(x0 = 0, y0 = 0, x1 = 0, y1 = f(0), col = "red", lty = 2)
+segments(x0 = 1, y0 = 0, x1 = 1, y1 = f(1), col = "red", lty = 2)
+
+```
+
+\section*{Integral 3: A integral da função densidade da Exponencial(1)}
+
+Seja \( Y \sim \text{Exponencial}(1) \), então a sua função de densidade é:
+
+\[
+\theta_3 = \int_0^\infty e^{-y} \, dy.
+\]
+
+Sabemos que:
+
+> "Se \( U \sim \text{Uniforme}(0, 1) \), então \( Y = -\log(U) \sim \text{Exponencial}(1) \)."
+
+> "Como \( Y \sim \text{Exponencial}(1) \), então \( \int_0^\infty e^{-y} dy = 1 \), que é a área total da densidade."
+
+Deste modo, usando mudança de variável:
+
+\[
+y = -\log(u) \Rightarrow e^{-y} = u
+\]
+\[
+dy = \frac{1}{u} \, du
+\]
+
+Substituindo na integral original, obtemos:
+
+\[
+\theta_3 = \int_0^1 e^{-y} \, dy = \int_0^1 u \cdot \frac{1}{u} \, du = \int_0^1 1 \, du = 1.
+\]
+
+\textbf{Algoritmo do Método de Monte Carlo:}
+
+```{r}
+# Estimando a integral de e^{-y} por Monte Carlo
+n <- 10000
+u <- runif(n)
+g <- rep(1, n)  # já que a função transformada ficou 1
+
+theta3 <- mean(g) 
+
+# Resultado
+cat("Estimativa de F(y) por Monte Carlo - Integral 3:", theta3, "\n")
+
+```
+
+Gráfico:
+
+```{r}
+# Valores de y e f(y) = e^{-y}
+y <- seq(0, 6, length.out = 200)
+fy <- exp(-y)
+
+# Plot da função densidade
+plot(y, fy, type = "l", lwd = 2, col = "blue",
+     ylab = "f(y)", xlab = "y",
+     main = "Função densidade da Exponencial(1)")
+
+# Adicionando uma linha de grade
+grid()
+
+# Preenchendo a área sob a curva até y = 6
+polygon(c(0, y, 6), c(0, fy, 0), col = rgb(0, 0, 1, 0.3), border = NA)
+
+# Segmentos verticais nas extremidades
+segments(x0 = 0, y0 = 0, x1 = 0, y1 = 1, col = "red", lty = 2)
+segments(x0 = 6, y0 = 0, x1 = 6, y1 = exp(-6), col = "red", lty = 2)
+
+# Linha no eixo y = 0
+abline(h = 0)
+
+
+```
+
+\section*{Integral 4: Teoria de transformadas de Laplace.}
+
+Usando a Distribuição mista do Exercício 1.18:
+
+\[
+\theta_4 = F(x) = \int_0^\infty x^y e^{-y} \, dy, \quad 0 \leq x \leq 1.
+\]
+
+**Dica:** Supondo que a função de distribuição condicional de \( X \) dado \( Y = y \) é:
+
+\[
+P(X \leq x \mid Y = y) = x^y, \quad 0 \leq x \leq 1.
+\]
+
+Resolução: Note que se trata de uma Mistura contínua, assim temos que a variável aleatória \( X \) é uma mistura contínua de distribuições se a sua função de distribuição acumulada pode ser reescrita como uma **esperança condicional** sobre \( Y \), e a distribuição condicional de \( X \mid Y = y \) é \( \text{Beta}(y, 1) \). Deste modo,
+
+\[
+F_X(x) = \int_{0}^{\infty} F_{X \mid Y = y}(x) f_Y(y) \, dy,
+\]
+
+onde \( F_{X \mid Y = y}(x) \) é uma família de distribuições indexada por valores reais \( y \), e \( f_Y(y) \) é uma função de pesos (ou densidade) tal que:
+
+\[
+\int_{0}^{\infty} f_Y(y) \, dy = 1.
+\]
+
+De fato, pois: 
+\[
+\int_{0}^{\infty} e^{-y} \, dy = [-e^{-y}]_{0}^{\infty}  = - \, 0 + 1 = 1. 
+\] 
+
+Portanto, $f_Y(y) = e^{-y}$  é uma densidade válida e funciona como função de peso na mistura.
+
+Logo, estamos gerando a variável aleatória \( X \) por **composição** da seguinte forma:
+
+1. Gerar \( Y \sim \text{Exponencial}(1) \)
+2. Gerar \( X \sim \text{Beta}(Y, 1) \)
+
+Essa é uma **mistura contínua de distribuições Beta**, onde o parâmetro da Beta varia continuamente segundo uma distribuição Exponencial. Ou seja, a função de distribuição de \( X \) é dada por:
+
+\[ F(x) = \int_0^\infty P(X \leq x \mid Y = y) f_Y(y) \, dy = \int_0^\infty x^y e^{-y} \, dy \]. 
+
+Mas aqui iremos usar do Método de Monte Carlo, deste modo usando-se do Método de Monte Carlo: 
+
+A esperança de uma função $g(Y)$ é dada por:
+
+\[ E[g(y)] = \int_0^\infty g(y) f_Y(y) \, dy \]. 
+
+No nosso caso, a função $g(y) = x^y$. Logo,
+
+\[ F(x) = E_Y[x^Y] = \int_0^\infty x^y e^{-y} \, dy \]. 
+
+como a $P(X \leq x \mid Y = y) = x^y$. Sabendo que:  
+
+
+$Y∼Exponencial(1)$, e;
+
+
+ $g(y) = x^y, \, x \, ∈ \, [0,1]$ é uma não trivia, uma distribuição associada (Exponencial), o que nos permite simular 
+$Y \sim \text{Exp}(1)$ e calcular a média amostral:
+
+\[
+\hat{F}(x) = \frac{1}{n} \sum_{i=1}^{n} x^{y_i},
+\]
+
+ou seja, uma aplicação legítima do Método de Monte Carlo.
+
+
+\textbf{Algoritmo do Método de Monte Carlo:}
+
+```{r}
+# Define o valor de x (deve estar entre 0 e 1)
+x <- 0.5  
+
+# Tamanho da amostra Monte Carlo
+n <- 10000
+
+# Gerar amostras Y ~ Exponencial(1)
+y <- rexp(n, rate = 1)
+
+# Função g(y) = x^y
+g_y <- x^y
+
+# Estimativa de F(x) pela média amostral
+theta4 <- mean(g_y)
+
+# Resultado
+cat("Estimativa de F(x) por Monte Carlo - Integral 4:", theta4, "\n")
+
+
+```
+
+
+Comparação com o valor analítico:
+
+
+Fazendo $x^y = e^{y \log x}$ em $F(x)$:
+
+\[ F(x) = \int_0^\infty e^{y \log x} e^{-y} \, dy \].
+
+Temos:
+
+\[
+F(x) = \int_0^\infty e^{-y(1 - \log x)} \, dy.
+\]
+Fazendo 
+\[
+u = e^{-y(1 - \log x)} \Rightarrow \log u = -y(1 - \log x) \Rightarrow y = -\frac{\log u}{1 - \log x}
+\]
+
+Derivando ambos os lados:
+
+\[
+dy = -\frac{1}{1 - \log x} \cdot \frac{1}{u} \, du = -\frac{1}{(1 - \log x) u} \, du
+\]
+
+Substituindo na integral:
+
+\[
+F(x) = \int_{u = 0}^1 u \cdot \left(-\frac{1}{(1 - \log x) u} \right) \, du = \int_0^1 \left(-\frac{1}{1 - \log x} \right) \, du
+\]
+
+\[
+F(x) = -\frac{1}{1 - \log x} \int_0^1 1 \, du = \frac{1}{1 - \log x}
+\]
+
+Portanto, obtemos o valor analítico da integral a partir da substituição adequada e da mudança de variável para distribuição uniforme no intervalo $[0, 1]$.
+
+Código R:
+
+```{r}
+# Valor teórico
+theta4_analitico <- 1 / (1 - log(x))
+
+# Comparação
+cat("Valor analítico:", theta4_analitico, "\n")
+cat("Erro absoluto:", abs(theta4 - theta4_analitico), "\n")
+
+
+
+```
+
+Gráfico:
+
+```{r}
+# Define o valor de x
+x <- 0.5
+
+# Sequência de y para o gráfico
+y_vals <- seq(0, 6, length.out = 500)
+
+# Função integranda: f(y) = x^y * exp(-y)
+f_y <- x^y_vals * exp(-y_vals)
+
+# Plot
+plot(y_vals, f_y, type = "l", col = "darkblue", lwd = 2,
+     main = "Área sob a curva",
+     xlab = "y", ylab = "f(y)",
+     ylim = c(0, max(f_y) * 1.1))
+
+# Adicionando uma linha de grade
+grid()
+
+# Área sob a curva
+polygon(c(0, y_vals, 6), c(0, f_y, 0),
+        col = rgb(0.1, 0.1, 0.8, 0.3), border = NA)
+
+# Eixo base
+abline(h = 0, col = "gray")
+
+# Segmentos verticais nas extremidades
+segments(x0 = 0, y0 = 0, x1 = 0, y1 = f_y[1], col = "red", lty = 2)
+segments(x0 = 6, y0 = 0, x1 = 6, y1 = f_y[length(f_y)], col = "red", lty = 2)
+
+```
+
+\section*{Conclusão}
+Os resultados obtidos pelo método de Monte Carlo apresentaram excelente aproximação aos valores analíticos, especialmente com $n=10000$ simulações. Isso evidencia a eficiência do método de Monte Carlo para estimativas de integrais, mesmo quando não se conhece a primitiva da função integranda.
+
+

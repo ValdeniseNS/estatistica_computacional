@@ -1,0 +1,192 @@
+---
+title: "Exercícios 2 - UT2"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: true
+    template: null
+
+---
+
+
+```{r, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+options(tinytex.verbose = TRUE)
+
+# OBS: Usar Ctrl+Alt+I para inserir um novo pedaço de comados 
+```
+
+### Atividade:
+
+Fazer um experimento que consiste em sortear a palavra: SORTE.
+
+Dois cenários:
+
+1º cenário: Todas as letras possuem a mesma probabilidade de serem sorteadas
+
+2º cenário: Probabilidades:
+
+S = 0.5
+
+O = 0.2
+
+R = 0.15
+
+T = 0.10
+
+E = 0.05
+
+Usar o método de monte carlo para estimar o número médio de bilhetes sorteados para ganhar na loteria. (Máximo: 1000 iterações)
+
+Resolução:
+
+1º cenário - Código R com probabilidades iguais (Monte Carlo):
+
+```{r}
+# Função de sorteio para formar a palavra "SORTE"
+Lottery_SORTE <- function(){
+  s <- FALSE # definindo padrão falso os resultados
+  o <- FALSE
+  r <- FALSE
+  t <- FALSE
+  e <- FALSE
+  Total_pick <- 0 # número de escolha é ZERO (bilhetes)
+  letras_sorteadas <- c() #criando um função para armazenar resultados 
+  
+  while(!s | !o | !r | !t | !e){ #condição enquanto for TRUE 
+    Total_pick <- Total_pick + 1
+    letra <- sample(c("S", "O", "R", "T", "E"), 1) # letras com igual probabilidade
+    letras_sorteadas <- c(letras_sorteadas, letra)
+    
+    if(letra == "S") s <- TRUE
+    if(letra == "O") o <- TRUE
+    if(letra == "R") r <- TRUE
+    if(letra == "T") t <- TRUE
+    if(letra == "E") e <- TRUE
+  }
+  
+  Resultados <- data.frame(
+    letras_sorteadas = paste(letras_sorteadas, collapse = ""),
+    Total_pick = Total_pick,
+    stringsAsFactors = FALSE
+  )
+  
+  return(Resultados)
+}
+
+# Função para replicar n experimentos
+Experimento_SORTE <- function(n){
+  df <- data.frame(
+    letras_sorteadas = character(),# limpa a lista dos valores 
+    Total_pick = integer(), # gerando a função acima
+    stringsAsFactors = FALSE
+  )
+  
+  for(k in 1:n){
+    Resultados <- Lottery_SORTE()
+    df <- rbind(df, Resultados)
+  }
+  
+  sum_Trial <- sum(df$Total_pick) #soma dos bilhetes comprados
+  media_pick <- sum_Trial / n #média dos bilhetes comprados
+  
+  return(list(
+    data = df,
+    sum_Trial = sum_Trial,
+    media_pick = media_pick
+  ))
+}
+
+# Rodar o experimento com 1000 repetições
+set.seed(42) 
+resultado_SORTE <- Experimento_SORTE(1000)
+
+# Mostrar a média de sorteios necessários
+resultado_SORTE$media_pick
+
+
+```
+
+
+2º cenário - Código R com probabilidades diferentes (Monte Carlo):
+
+```{r}
+# Função de sorteio com probabilidades desiguais
+Lottery_SORTE_pesos <- function(){
+  s <- FALSE
+  o <- FALSE
+  r <- FALSE
+  t <- FALSE
+  e <- FALSE
+  Total_pick <- 0
+  letras_sorteadas <- c()
+  
+  while(!s | !o | !r | !t | !e){
+    Total_pick <- Total_pick + 1
+    letra <- sample(
+      c("S", "O", "R", "T", "E"),
+      size = 1,
+      prob = c(0.5, 0.2, 0.15, 0.10, 0.05), # probabilidades desiguais
+      replace = TRUE
+    )
+    letras_sorteadas <- c(letras_sorteadas, letra)
+    
+    if(letra == "S") s <- TRUE
+    if(letra == "O") o <- TRUE
+    if(letra == "R") r <- TRUE
+    if(letra == "T") t <- TRUE
+    if(letra == "E") e <- TRUE
+  }
+  
+  Resultados <- data.frame(
+    letras_sorteadas = paste(letras_sorteadas, collapse = ""),
+    Total_pick = Total_pick,
+    stringsAsFactors = FALSE
+  )
+  
+  return(Resultados)
+}
+
+# Função para replicar o experimento n vezes
+Experimento_SORTE_pesos <- function(n){
+  df <- data.frame(
+    letras_sorteadas = character(),
+    Total_pick = integer(),
+    stringsAsFactors = FALSE
+  )
+  
+  for(k in 1:n){
+    Resultados <- Lottery_SORTE_pesos()
+    df <- rbind(df, Resultados)
+  }
+  
+  sum_Trial <- sum(df$Total_pick)
+  media_pick <- sum_Trial / n
+  
+  return(list(
+    data = df,
+    sum_Trial = sum_Trial,
+    media_pick = media_pick
+  ))
+}
+
+# Rodar o experimento com até 1000 repetições
+set.seed(42)  
+resultado_pesos <- Experimento_SORTE_pesos(1000)
+
+# Mostrar a média de bilhetes necessários
+resultado_pesos$media_pick
+
+
+
+```
+Conclusão: 
+
+Note que o valor médio será maior do que no cenário um de probabilidades iguais, porque a letra "E", com apenas 5% de chance, se torna o item mais difícil de obter para completar a palavra. Isso é comum em jogos de azar e loterias.
+
+
+
+
