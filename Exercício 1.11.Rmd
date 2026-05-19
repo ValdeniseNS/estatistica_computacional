@@ -1,0 +1,127 @@
+---
+title: "Exercícios da p. 44"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+png("grafico_lognormal.png")
+Sys.setlocale("LC_CTYPE", "pt_BR.UTF-8")  # Tente configurar a localidade para UTF-8
+
+```
+
+## Exercício 1.11. 
+Escreva uma função para gerar variáveis aleatórias com distribuição Lognormal($\mu$, $𝜎^2$) usando o método polar e o método da transformação. Gere amostras de tamanho 1000 e compare através de histogramas com a função densidade da distribuição
+lognormal dada pela função dlnorm do R.
+
+
+Passos da resolução:
+
+Passo 1: Método Polar (Box-Muller) para gerar variáveis normais e depois transformar em lognormais.
+
+Passo 2: Método da Transformação Inversa para gerar variáveis lognormais diretamente.
+
+Passo 3: Gerar histogramas para as amostras e comparar com a função densidade da distribuição lognormal.
+
+Deste modo, temos: 
+
+```{r }
+#Passo 1:
+# Passo 1: Método Polar para gerar variáveis lognormais
+
+gerar_lognormal_polar <- function(n, mu, sigma2) {
+  itera <- ceiling(n / 2)  # Número de iterações necessário
+  amostras <- numeric(n)  # Vetor para armazenar amostras
+  
+  for (i in 1:itera) { 
+    s <- 1.5
+    while (s > 1) { # Garante que s esteja no intervalo correto
+      u1 <- runif(1)
+      u2 <- runif(1)
+      v1 <- 2 * u1 - 1
+      v2 <- 2 * u2 - 1
+      s <- v1^2 + v2^2
+    }
+    
+    x <- sqrt(-2 * log(s) / s) * v1
+    y <- sqrt(-2 * log(s) / s) * v2
+    
+    # Transforma a variável normal em lognormal
+    amostras[i * 2 - 1] <- exp(mu + sqrt(sigma2) * x)  # Primeiro número
+    if (2 * i <= n) {
+      amostras[2 * i] <- exp(mu + sqrt(sigma2) * y)  # Segundo número (se dentro do limite)
+    }
+  }
+  
+  return(amostras[1:n])
+}
+
+
+
+```
+
+
+Vamos agora realizar o passo 2:
+
+```{r }
+#Passo 2:
+# Função para gerar variáveis lognormais usando a transformação direta
+gerar_lognormal_transformacao <- function(n, mu, sigma2) {
+  # Gerar amostras normais (N(mu, sigma^2)) e depois transformá-las em lognormais
+  amostras_normais <- rnorm(n, mean = mu, sd = sqrt(sigma2))
+  amostras_lognormal <- exp(amostras_normais)
+  
+  return(amostras_lognormal)
+}
+
+
+
+```
+
+Por fim, comparando os histogramas para uma amostra de tamanho 100: 
+
+```{r }
+
+# Passo 3:
+
+# Parâmetros da distribuição lognormal
+mu <- 1
+sigma2 <- 0.5^2
+
+# Gerar 1000 amostras com ambos os métodos
+set.seed(123)
+amostras_polar <- gerar_lognormal_polar(1000, mu, sigma2)
+amostras_transformacao <- gerar_lognormal_transformacao(1000, mu, sigma2)
+
+par(mfrow = c(1, 2))
+
+# Ajustando ylim automaticamente
+densidade_teorica <- dlnorm(seq(min(amostras_polar), max(amostras_polar), length.out = 100), 
+                            meanlog = mu, sdlog = sqrt(sigma2))
+
+densidade <- dlnorm(seq(min(amostras_transformacao), max(amostras_transformacao), length.out = 100), 
+                    meanlog = mu, sdlog = sqrt(sigma2))
+
+# Histograma das amostras do método polar
+hist(amostras_polar, breaks = 30, probability = TRUE, main = "Método Polar", 
+     ylab = "Densidade",
+     xlab = "Valores", 
+     col = "lightblue", 
+     ylim = c(0, max(densidade_teorica) * 1.5))
+curve(dlnorm(x, meanlog = mu, sdlog = sqrt(sigma2)), add = TRUE, col = "red", lwd = 2)
+
+# Histograma das amostras do método da transformação
+hist(amostras_transformacao, breaks = 30, probability = TRUE, main = "Método da Transf.", 
+     ylab = "Densidade", 
+     xlab = "Valores", 
+     col = "lightgreen",
+     ylim = c(0, max(densidade) * 1.5))
+curve(dlnorm(x, meanlog = mu, sdlog = sqrt(sigma2)), add = TRUE, col = "red", lwd = 2)
+
+
+```
+

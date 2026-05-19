@@ -1,0 +1,126 @@
+---
+title: "Exercícios da p. 48"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+```
+
+
+
+## Exercício 1.17. Usando o método da composição, implemente uma função para gerar de uma variável aleatória com função de distribuição:
+a. 
+\[
+F(x) = \frac{x + x^2}{2}, \quad 0 \leq x \leq 1
+\]
+
+Resolução: Apesar do enunciado mencionar "usar o método da composição", o método mais natural e direto de gerar amostras é o método da inversa da CDF. Isso acontece porque o nome "método da composição" às vezes é usado de forma mais geral, incluindo o uso da inversa da CDF quando conseguimos isolá-la. Deste modo, a ideia é: 
+
+Algoritmo
+
+Passo 1: Gerar um valor u da distribuição uniforme(0, 1);
+
+Passo 2: Obter o valor x através da transformação $𝐹^{−1}(u)$.
+
+A função de distribuição acumulada (CDF) fornecida é:
+
+\[
+F(x) = \frac{x + x^2}{2}, \quad 0 \leq x \leq 1
+\]
+
+Seja \( u \) um número aleatório uniformente distribuido entre 0 e 1, igualando na equação e isolando \( x \) temos:
+
+\[
+u = F(x) = \frac{x + x^2}{2}
+\]
+
+Multiplicando ambos os lados por 2:
+
+\[
+2u = x + x^2
+\]
+
+Reorganizando os termos:
+
+\[
+x^2 + x - 2u = 0
+\]
+
+Essa é uma equação do segundo grau na variável \( x \), com solução dada pela fórmula de Bhaskara:
+
+\[
+x = \frac{-1 \pm \sqrt{1 + 8u}}{2}
+\]
+
+Como estamos interessados apenas em valores no intervalo \( [0, 1] \), descartamos a raiz negativa. Portanto, a solução válida é:
+
+\[
+x = \frac{-1 + \sqrt{1 + 8u}}{2}
+\]
+
+
+Usando o código do algoritmo: 
+
+```{r }
+
+# Função para gerar uma amostra com a CDF 
+gerar_composta <- function(n) {
+  u <- runif(n)
+  x <- (-1 + sqrt(1 + 8 * u)) / 2
+  return(x)
+}
+
+
+
+```
+
+Testando: 
+
+```{r }
+library(Deriv)
+
+# Função CDF e sua derivada (densidade teórica)
+CDF <- function(x) (x + x^2) / 2
+dens_teorica <- Deriv(CDF, "x")
+
+# Amostra
+amostra_a <- gerar_composta(10000)
+
+# Calcular valor máximo da densidade teórica e da estimada
+x_seq <- seq(0, 1, length.out = 1000)
+y_teorica <- dens_teorica(x_seq)
+y_estimada <- density(amostra_a)$y
+ylim_max <- max(y_teorica, y_estimada)
+
+# Histograma + densidade estimada:
+# Gráfico
+hist(amostra_a, probability = TRUE, breaks = 30, col = "lightblue",
+     main = "Amostra do item (a)", 
+     xlab = "x", ylab = "Densidade",
+     ylim = c(0, ylim_max * 1.1))
+
+# Adicionar densidade estimada - A curva aproximada construída com a amostra. 
+
+lines(density(amostra_a, adjust = 1.5), col = "red", lwd = 2)
+
+# Adicionar densidade teórica, derivada da CDF - Curva azul tracejada.
+
+curve(dens_teorica(x), from = 0, to = 1, col = "blue", lwd = 2, add = TRUE, lty = 2)
+
+# Linha horizontal de referência:
+abline(h = seq(0, 1.5, by = 0.5), col = "gray", lty = 2)
+
+# Legenda ajustada no canto superior esquerdo:
+legend("topleft", legend = c("Estimada", "Teórica"),
+       col = c("red", "blue"), lwd = 2, lty = c(1, 2), bg = "white")
+  
+```
+

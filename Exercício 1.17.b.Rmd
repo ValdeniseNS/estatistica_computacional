@@ -1,0 +1,124 @@
+---
+title: "Exercícios da p. 48"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+#install.packages("Deriv")
+
+```
+
+
+
+## Exercício 1.17. Usando o método da composição, implemente uma função para gerar de uma variável aleatória com função de distribuição:
+b. 
+\[
+F(x) = \frac{x + x^3 + x^5}{3}, \quad 0 \leq x \leq 1
+\]
+
+Resolução: Apesar do enunciado mencionar "usar o método da composição", o método mais natural e direto de gerar amostras é o método da inversa da CDF. Isso acontece porque o nome "método da composição" às vezes é usado de forma mais geral, incluindo o uso da inversa da CDF quando conseguimos isolá-la. Deste modo, a ideia é: 
+
+Algoritmo
+
+Passo 1: Gerar um valor u da distribuição uniforme(0, 1);
+
+Passo 2: Obter o valor x através da transformação $𝐹^{−1}(u)$.
+
+A função de distribuição acumulada (CDF) fornecida é:
+
+\[
+F(x) = \frac{x + x^3 + x^5}{3}, \quad 0 \leq x \leq 1
+\]
+
+Seja \( u \) um número aleatório uniformente distribuido entre 0 e 1, igualando na equação e isolando \( x \) temos:
+
+\[
+u = F(x) = \frac{x + x^3 + x^5}{3}
+\]
+
+Multiplicando ambos os lados por 3:
+
+\[
+3u = x + x^3 + x^5
+\]
+
+Reorganizando os termos:
+
+\[
+ x^5 + x^3 + x - 2u = 0
+\]
+
+é uma equação polinomial de 5º grau, e para esse tipo de equação não existe uma fórmula geral de solução. 
+
+
+Usando o código do algoritmo: 
+
+```{r }
+
+# Função para gerar uma amostra com a CDF 
+gerar_inversa_b <- function(n) {
+  u <- runif(n)
+  x <- numeric(n)
+
+#A função uniroot() no R serve para encontrar raízes de equações, ou seja, ela busca um valor de x tal que uma função f(x)=0 dado o [0, 1]. 
+  
+  for (i in 1:n) {
+    x[i] <- uniroot(function(x) (x + x^3 + x^5) / 3 - u[i],
+                    lower = 0, upper = 1)$root
+  }
+
+  return(x)
+}
+
+
+
+```
+
+Testando: 
+
+```{r }
+
+library(Deriv)
+
+# Função CDF e sua derivada (densidade teórica)
+CDF <- function(x) (x + x^3 + x^5) / 3
+dens_teorica <- Deriv(CDF, "x")
+
+# Amostra
+amostra_b <- gerar_inversa_b(1000)
+
+# Calcular valor máximo da densidade teórica e da estimada
+x_seq <- seq(0, 1, length.out = 1000)
+y_teorica <- dens_teorica(x_seq)
+y_estimada <- density(amostra_b)$y
+ylim_max <- max(y_teorica, y_estimada)
+
+# Gráfico
+hist(amostra_b, probability = TRUE, breaks = 30, col = "lightblue",
+     main = "Amostra do item (b)", 
+     xlab = "x", ylab = "Densidade",
+     ylim = c(0, ylim_max * 1.1))
+
+# Adicionar densidade estimada - A curva aproximada construída com a amostra:
+lines(density(amostra_b, adjust = 1.5), col = "red", lwd = 2)
+
+# Adicionar densidade teórica derivada da CDF - Curva azul tracejada:
+
+curve(dens_teorica(x), from = 0, to = 1, col = "blue", lwd = 2, add = TRUE, lty = 2)
+
+# Linha horizontal de referência:
+abline(h = seq(0, 3, by = 0.5), col = "gray", lty = 2)
+
+# Legenda ajustada no canto superior esquerdo:
+legend("topleft", legend = c("Estimada", "Teórica"),
+       col = c("red", "blue"), lwd = 2, lty = c(1, 2), bg = "white")
+  
+```
+

@@ -1,0 +1,105 @@
+---
+title: "Exercícios da p. 43-44"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+```
+
+## Exercício 1.9. 
+Implemente uma função para gerar amostras de tamanho n da variável aleatória com função densidade de probabilidade é dada por
+\[
+f(x) =
+\begin{cases}
+    \frac{x - 2}{2}, & \text{se } 2 \leq x \leq 3, \\
+    \frac{2 - x/3}{2}, & \text{se } 3 \leq x \leq 6.
+\end{cases}
+\]
+
+Apresente as contas necessárias.
+
+
+O cálculo da função de densidade pode ser feito com o seguinte código:
+
+```{r }
+dens <- function(x) {
+  # Condição para o intervalo 2 <= x <= 3
+  part1 <- (x >= 2 & x <= 3) * ((x - 2) / 2)
+  
+  # Condição para o intervalo 3 < x <= 6
+  part2 <- (x > 3 & x <= 6) * ((2 - x / 3) / 2)
+  
+  return(part1 + part2)
+}
+
+
+```
+
+
+Para gerar amostras de uma variável aleatória com a função de densidade especificada, podemos utilizar o método da transformação inversa. A ideia é: 
+
+Algoritmo
+
+Passo 1: Gerar um valor u da distribuição uniforme(0, 1);
+
+Passo 2: Obter o valor x através da transformação $𝐹^{−1}(u)$.
+
+
+Calculando a função acumulada da distribuição: 
+
+```{r}
+# Função para calcular a CDF F(x) via integração
+CDF <- function(x) {
+  if (x < 2) {
+    return(0)  # Fora do intervalo, probabilidade zero
+  } else if (x >= 2 & x <= 6) {
+    resultado <- integrate(dens, lower = 2, upper = x)
+    return(resultado$value)
+  } else {
+    return(1)  # Probabilidade acumulada total
+  }
+}
+
+```
+Obs.: a função CDF é usada dentro de um for, onde o x passado para ela é um único número por vez, tipo CDF(2.5) — ou seja, escalar, e não vetor. Nesse caso, o Vectorize() não é necessário!
+
+Usando o código do algoritmo: 
+
+```{r }
+
+# Função para gerar amostras usando a inversa da CDF
+gerar_amostras <- function(n) {
+  u <- runif(n)  # Gera n números uniformes entre 0 e 1
+  amostras <- numeric(n)
+  
+  for (i in 1:n) {
+    # Resolver numericamente para encontrar a inversa de F(x)
+    amostras[i] <- uniroot(function(x) CDF(x) - u[i], lower = 2, upper = 6)$root
+  }
+  
+  return(amostras)
+}
+
+```
+
+Obs: Método numérico para a inversa: uniroot resolve a inversa de F(x) sem precisar manipular a fórmula.
+
+Testando:
+
+
+```{r }
+
+# Testando com 10 amostras
+set.seed(123)
+amostras <- gerar_amostras(10)
+amostras
+
+```
+
+

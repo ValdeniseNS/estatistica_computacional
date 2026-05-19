@@ -1,0 +1,96 @@
+---
+title: "Exercícios da p. 19"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+```
+
+## Exercício 1.5. Implemente o algoritmo para gerar da distribuição geométrica.
+
+A distribuição geométrica modela o número de tentativas necessárias até a primeira ocorrência de sucesso em uma sequência de ensaios de Bernoulli independentes.
+
+Dada uma probabilidade de sucesso $p$, o número de tentativas $X$ segue uma distribuição geométrica com a seguinte função de probabilidade:
+
+ $P(X=k)=(1−p)^{(k−1)}.p$,    k=1,2,3,…
+
+Ou seja, a probabilidade de precisar de exatamente $k$ tentativas antes do primeiro sucesso é dada pela fórmula acima.
+
+Algoritmo:
+Inicialize $X = 0$ (contador de tentativas).
+
+Gere valores aleatórios U ~ U(0,1) (distribuição uniforme).
+
+Compare com p:
+Se U < p, sucesso! Pare o processo.
+
+Caso contrário, continue e incremente X.
+
+Retorne X como o número de tentativas até o primeiro sucesso.
+
+
+```{r cars}
+gerar_geometrica <- function(p) { 
+  if (p <= 0 || p > 1) { # Se p não estiver no intervalo (0,1]
+    stop("A probabilidade p deve estar no intervalo (0,1].")
+  }
+  
+  X <- 1  # Inicializa o contador de tentativas
+
+  while (runif(1) >= p) {  # Continua enquanto não houver sucesso
+    X <- X + 1  # Incrementa o número de tentativas
+  }
+  
+  return(X)  # Retorna o número de tentativas até o sucesso
+}
+
+# Exemplo de uso
+set.seed(42)  # Para garantir reprodutibilidade
+p <- 0.3  # Probabilidade de sucesso
+amostra <- gerar_geometrica(p)
+print("Número de tentativas até o primeiro sucesso:")
+amostra
+
+```
+
+## Teste com múltiplas amostras
+
+Podemos gerar várias amostras para verificar a distribuição:
+
+
+```{r }
+
+# Gerando múltiplas amostras
+set.seed(42)
+p <- 0.3
+amostras1 <- replicate(1000, gerar_geometrica(p))
+
+# Criando um histograma estilizado
+hist(amostras1, breaks = 30, col = "skyblue", probability = TRUE, 
+     main = "Distribuição Geométrica (p = 0.3)", 
+     xlab = "Número de tentativas até o primeiro sucesso", 
+     ylab = "Densidade", border = "black")
+
+# Adicionando linhas nos eixos X e Y para destacar:
+
+abline(h = seq(0, 1, 0.05), col = "gray", lty = "dotted") #Linhas horizontais
+abline(v = seq(1, max(amostras1), 1), col = "gray", lty = "dotted")  # Linhas verticais
+box(col = "black", lwd = 2)  # Caixa ao redor do gráfico
+
+
+# Adicionando uma curva de densidade 
+lines(density(amostras1, adjust = 2), col = "red", lwd = 2)
+
+
+```
+
+Nota-se no gráfico que a distribuição tem uma cauda longa, característica da distribuição geométrica.
+
+
+

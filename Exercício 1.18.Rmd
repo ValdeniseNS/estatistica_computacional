@@ -1,0 +1,115 @@
+---
+title: "Exercícios da p. 48"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+
+```
+
+
+
+## Exercício 1.18
+
+Implemente um algoritmo para gerar uma amostra de tamanho \( n \) da variável aleatória com função de distribuição:
+
+\[
+F(x) = \int_0^\infty x^y e^{-y} \, dy, \quad 0 \leq x \leq 1.
+\]
+
+**Dica:** Suponha que a função de distribuição condicional de \( X \) dado \( Y = y \) é:
+
+\[
+P(X \leq x \mid Y = y) = x^y, \quad 0 \leq x \leq 1.
+\]
+
+Resolução: Note que se trata de uma Mistura contínua, assim temos que a variável aleatória \( X \) é uma mistura contínua de distribuições se a sua função de distribuição acumulada é dada por:
+
+\[
+F_X(x) = \int_{0}^{\infty} F_{X \mid Y = y}(x) f_Y(y) \, dy,
+\]
+
+onde \( F_{X \mid Y = y}(x) \) é uma família de distribuições indexada por valores reais \( y \), e \( f_Y(y) \) é uma função de pesos (ou densidade) tal que:
+
+\[
+\int_{0}^{\infty} f_Y(y) \, dy = 1.
+\]
+
+De fato, pois: 
+\[
+\int_{0}^{\infty} e^{-y} \, dy = [-e^{-y}]_{0}^{\infty}  = - \, 0 + 1 = 1. 
+\] 
+
+Portanto, $f_Y(y) = e^{-y}$  é uma densidade válida e funciona como função de peso na mistura.
+
+Logo, estamos gerando a variável aleatória \( X \) por **composição** da seguinte forma:
+
+1. Gerar \( Y \sim \text{Exponencial}(1) \)
+2. Gerar \( X \sim \text{Beta}(Y, 1) \)
+
+Essa é uma **mistura contínua de distribuições Beta**, onde o parâmetro da Beta varia continuamente segundo uma distribuição Exponencial.
+
+Ou seja, a função de distribuição de \( X \) é dada por:
+
+\[ F(x) = \int_0^\infty P(X \leq x \mid Y = y) f_Y(y) \, dy = \int_0^\infty x^y e^{-y} \, dy \]
+
+### Algoritmo - Geração de amostras
+
+O algoritmo baseia-se em gerar amostras a partir de uma mistura contínua de distribuições, utilizando a composição entre uma Exponencial e uma Beta.
+
+**Passos do algoritmo:**
+
+1. Para cada observação \( i = 1, 2, \dots, n \):
+   - Gerar \( Y_i \sim \text{Exponencial}(1) \)
+   - Gerar \( X_i \sim \text{Beta}(Y_i, 1) \)
+
+2. Retornar a amostra \( \{ X_1, X_2, \dots, X_n \} \)
+
+Esse procedimento funciona porque a função de distribuição acumulada de \( X \) pode ser reescrita como uma **esperança condicional** sobre \( Y \), e a distribuição condicional de \( X \mid Y = y \) é \( \text{Beta}(y, 1) \).
+
+
+Usando o código do algoritmo:
+
+
+```{r}
+
+# Função para gerar amostras de X
+# Onde X | Y = y ~ Beta(y, 1), e Y ~ Exp(1)
+gerar_amostra_beta_mistura <- function(n) {
+  y <- rexp(n, rate = 1)            # Y ~ Exponencial(1)
+  x <- rbeta(n, shape1 = y, shape2 = 1)  # X ~ Beta(Y, 1)
+  return(x)
+}
+
+
+```
+
+Testando: 
+
+```{r }
+
+# Exemplo: gerar 1000 amostras
+set.seed(123)
+amostra <- gerar_amostra_beta_mistura(1000)
+
+
+# Histograma com densidade estimada
+hist(amostra, probability = TRUE, breaks = 30,
+     main = "Amostra gerada via mistura Beta(.,1)",
+     xlab = "x", col = "lightblue")
+lines(density(amostra), col = "red", lwd = 2)
+legend("topright", legend = c("Densidade estimada"),
+       col = c("red"), lwd = 2, bg = "white")
+  
+```
+
+
+

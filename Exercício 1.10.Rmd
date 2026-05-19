@@ -1,0 +1,62 @@
+---
+title: "Exercícios da p. 44"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+```
+
+## Exercício 1.10. 
+Implemente uma função para gerar amostras de tamanho n da variável aleatória com função de distribuição é dada por
+
+
+\[
+F(x | \alpha, \beta) = 1 - \exp(-\alpha x^\beta), \quad \text{para } x > 0
+\]
+
+Apresente as contas necessárias.
+
+Resolução:
+
+Para gerar amostras de uma variável aleatória com a função de densidade especificada, podemos utilizar o método da transformação inversa. A ideia é: 
+
+Algoritmo
+
+Passo 1: Gerar um valor u da distribuição uniforme(0, 1);
+
+Passo 2: Obter o valor x através da transformação $𝐹^{−1}(u)$.
+
+Usando o código do algoritmo: 
+
+```{r }
+
+# Função para gerar amostras
+gerar_amostras <- function(n, alpha, beta) {
+  u <- runif(n)  # Gera n números aleatórios de U(0,1)
+  x <- (-log(1 - u) / alpha)^(1 / beta)  # Aplica a inversa da CDF
+  return(x)
+}
+  
+
+```
+
+
+Testando:
+
+
+```{r }
+
+# Testando com 10 amostras
+set.seed(123)
+alpha <- 2
+beta <- 1.5
+amostras <- gerar_amostras(10, alpha, beta)
+amostras
+
+```

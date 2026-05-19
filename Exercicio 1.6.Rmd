@@ -1,0 +1,112 @@
+---
+title: "Exercícios da p. 19"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+```
+
+
+
+## Exercício 1.6. Implemente a versão otimizada do algoritmo para gerar da distribuição Poisson e faça comparações do tempo computacional com o algoritmo inicial. Utilize o pacote microbenchmark para comparar.
+
+O algoritmo otimizado usa o método da Transformada Inversa com a propriedade de que a soma de variáveis exponenciais gera uma variável Poisson.
+
+se X ~ Poisson(lambda), então os tempos entre eventos seguem uma distribuição Exponencial(1/lambda).
+
+Fluxo do Algoritmo
+
+Passo 1: Inicializa p = 1 e k = 0.
+onde:
+
+k <- 0 é contador que armazena o número de eventos.
+
+p <- 1 armazena o produto acumulado dos números aleatórios.
+
+Passo 2: Em cada iteração:
+
+Sorteia um número aleatório U ~ Uniform(0,1);
+
+Multiplica p por esse número;
+
+Incrementa k aumentando o valor de k em 1 a cada iteração do loop repeat. Isso significa que estamos contando quantas multiplicações consecutivas de números aleatórios
+U ~ Uniform(0,1) são necessárias até que o produto acumulado fique menor que exp(-lambda).
+
+Passo 3: Se p < L, o loop para e retorna k - 1 (pois começa a contar de 1) quantidade de eventos ocorridos.
+
+Obs.:
+
+pr representa a probabilidade de massa P(X=i) para i.
+
+Fx representa a função de distribuição acumulada. 
+
+Inicialmente, Fx = P(X = 0), mas depois ela é atualizada acumulando as probabilidades: Fx <- Fx + pr.
+
+
+```{r cars}
+library(microbenchmark)
+
+# Algoritmo original para gerar uma variável de Poisson
+rpois_original <- function(lambda) {
+  u <- runif(1) # Gera um número aleatório U ~ Uniform(0,1)  
+  pr <- exp(-lambda)  # Probabilidade inicial P(X = 0)
+  Fx <- pr # Acumula 
+  i <- 0
+  
+  while (u >= Fx) {
+    pr <- pr * lambda / (i + 1)  # Atualiza P(X = i)
+    Fx <- Fx + pr  # Acumula F(X)
+    i <- i + 1
+  }
+  
+  return(i)
+}
+
+# Algoritmo otimizado usando soma de variáveis exponenciais
+rpois_otimizado <- function(lambda) {
+  L <- exp(-lambda)  # Define o limiar baseado na distribuição de Poisson
+  k <- 0             # Inicializa o contador de eventos
+  p <- 1             # Produto acumulado de números aleatórios
+  
+  repeat {           # Loop infinito até atingir a condição de parada
+    k <- k + 1
+    p <- p * runif(1)  # Multiplica um número aleatório U ~ Uniform(0,1)
+    
+    if (p < L) {       # Condição de parada
+      return(k - 1)    # Retorna k - 1 como valor da variável Poisson
+    }
+  }
+}
+
+
+
+
+```
+
+Em resumo: A geração correta da variável Poisson se dar com o número de multiplicações de U necessárias até que o produto fique abaixo de exp(-lambda) corresponde à distribuição de Poisson.
+
+Exemplo:
+
+```{r }
+library(microbenchmark)
+# Comparação de tempo computacional
+lambda <- 5
+n <- 1000
+
+tempo_comparacao <- microbenchmark(
+  original = replicate(n, rpois_original(lambda)),
+  otimizado = replicate(n, rpois_otimizado(lambda)),
+  times = 10
+)
+
+print(tempo_comparacao)
+```
+Podemos nota, no exemplo acima, que o método original é, em média, mais rápido do que o método otimizado. O tempo mediano também mostra que o método otimizado tende a ser mais lento. 
+
+

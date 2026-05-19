@@ -1,0 +1,88 @@
+---
+title: "Exercícios da p. 43"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+```
+
+## Exercício 1.8. Reimplemente o método da transformação inversa para gerar da distribuição Normal truncada sem utilizar as funções pnorm e dnorm. Utilize a função integrate para calcular a função de distribuição acumulada em um ponto. Use a função qnorm, visto que neste caso fica complicado implementar este método sem o uso desta função
+
+
+De acordo com a Proposição 1.1 podemos dizer que o procedimento para a geração da variável aleatória é dado por:
+
+Algoritmo
+
+Passo 1: Gerar um valor u da distribuição uniforme(0, 1);
+
+Passo 2: Obter o valor x através da transformação $𝐹^{−1}(u)$.
+
+
+A PDF da distribuição normal truncada é obtida a parti da PDF da normal padrão, ajustando para o intervalo de trucamento [a, b].
+
+Encontrando a PDF da normal padrão (não trucada), sem usar a função pnorm:
+
+```{r }
+# Encontrando a PDF da normal padrão.
+
+pnormal <- function(x, mu, sigma){
+  (exp(-(x - mu)^2/(2*sigma^{2})))/(sigma*sqrt(2*pi))
+}
+
+```
+
+Encontrando a CDF da normal padrão (não trucada), sem usar a função dnorm:
+
+
+```{r }
+# Encontrando a CDF da normal padrão (não trucada), "dnorm".
+
+dnormal <- function(x, mu = 0, sigma = 1) {
+  integrate(pnormal, lower = -Inf, upper = x, mu = mu, sigma = sigma)$value
+}
+
+```
+
+
+Implementando a função inversa para gerar a variável aleatória truncada:
+
+Vamos usar o algoritmo acima, ou seja, vamos gerar um valor uniforme u e, em seguida, usar a função inversa da CDF para encontrar a correspondente variável aleatória.
+
+
+```{r }
+
+# Função para gerar a normal truncada usando a transformação inversa
+gerar_normal_truncada <- function(a, b, mu = 0, sigma = 1) {
+  # Passo 1: Gerar um valor u da distribuição uniforme (0, 1):
+  u <- runif(1)
+  
+  # Passo 2: Encontrar a CDF nos limites [a, b]:
+  Fa <- dnormal(a, mu, sigma)  # CDF no ponto a
+  Fb <- dnormal(b, mu, sigma)  # CDF no ponto b
+  
+  # Usar a inversa da CDF da normal truncada para encontrar o valor correspondente:
+  quantile <- qnorm(Fa + u * (Fb - Fa), mu, sigma)
+  
+  return(quantile)
+}
+
+
+```
+
+Testando:
+
+
+```{r }
+
+
+set.seed(123)  # Para reprodutibilidade
+gerar_normal_truncada(a = -1, b = 1)  # Gera um valor truncado entre -1 e 1
+
+```
+

@@ -1,0 +1,129 @@
+---
+title: "Exercícios da p. 48"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+
+```
+
+
+
+## Exercício 1.17. Usando o método da composição, implemente uma função para gerar de uma variável aleatória com função de distribuição:
+c. 
+\[
+F(x) =
+\begin{cases}
+    \frac{1 - e^{-2x} + 2x}{3}, & \text{se } 0 \leq x \leq 1, \\
+    \frac{3 - e^{-2x}}{3}, & \text{se } 1 < x < \inf.
+\end{cases}
+\]
+
+Resolução: Apesar do enunciado mencionar "usar o método da composição", o método mais natural e direto de gerar amostras é o método da inversa da CDF. Isso acontece porque o nome "método da composição" às vezes é usado de forma mais geral, incluindo o uso da inversa da CDF quando conseguimos isolá-la. Deste modo, a ideia é: 
+
+Algoritmo
+
+Passo 1: Gerar um valor u da distribuição uniforme(0, 1);
+
+Passo 2: Obter o valor x através da transformação $𝐹^{−1}(u)$.
+
+O cálculo da função de densidade pode ser feito com o seguinte código:
+
+```{r }
+CDF <- Vectorize(function(x) {
+  if (x >= 0 && x <= 1) {
+    return((1 - exp(-2 * x) + 2 * x) / 3)
+  } else if (x > 1) {
+    return((3 - exp(-2 * x)) / 3)
+  } else {
+    return(0)
+  }
+})
+
+```
+
+Obs.: Vectorize() é uma função que transforma uma função escalar (que funciona com um único número por vez) em uma função vetorial, ou seja, que pode ser aplicada diretamente a vetores de valores.
+
+Função da densidade teórica, não precisa para o código do algoritmo: 
+
+```{r }
+
+# Função da densidade teórica (derivada da CDF por partes)
+dens_teorica_c <- function(x) {
+  ifelse(x >= 0 & x <= 1,
+         (2 * exp(-2 * x) + 2) / 3,
+         ifelse(x > 1, (2 * exp(-2 * x)) / 3, 0))
+}
+
+```
+
+Obs.: Como a CDF foi dada por partes, é melhor calcular a derivada de cada pedaço manualmente, e definir a densidade teórica como uma função por partes também. Note que não usamos Deriv().
+
+Usando o código do algoritmo:
+
+
+```{r}
+# Gerar amostras com inversa por partes
+gerar_inversa_c <- function(n) {
+  u <- runif(n)
+  x <- numeric(n)
+
+  for (i in 1:n) {
+    if (u[i] <= ((1 - exp(-2 * 1) + 2 * 1) / 3)) {
+      # Parte do intervalo [0,1] com uniroot
+      x[i] <- uniroot(function(x) ((1 - exp(-2 * x) + 2 * x) / 3) - u[i],
+                      lower = 0, upper = 1)$root
+    } else {
+      # Parte para x > 1 com inversa analítica da CDF
+      x[i] <- -0.5 * log(3 * (1 - u[i]))
+    }
+  }
+  return(x)
+}
+
+
+```
+
+Testando: 
+
+```{r }
+
+# Gerar amostra
+amostra_c <- gerar_inversa_c(1000)
+
+# Estimar densidade da amostra
+y_estimada <- density(amostra_c)$y
+x_seq <- seq(0, 3, length.out = 1000)
+y_teorica <- dens_teorica_c(x_seq)
+ylim_max <- max(y_estimada, y_teorica)
+
+# Gráfico final
+hist(amostra_c, probability = TRUE, breaks = 30, col = "lightblue",
+     main = "Amostra do item (c)", 
+     xlab = "x", ylab = "Densidade",
+     ylim = c(0, ylim_max * 1.1))
+
+# Densidade estimada
+lines(density(amostra_c, adjust = 1.5), col = "red", lwd = 2)
+
+# Densidade teórica
+curve(dens_teorica_c(x), from = 0, to = 3, col = "blue", lwd = 2, lty = 2, add = TRUE)
+
+# Linhas horizontais
+abline(h = seq(0, 1.5, by = 0.5), col = "gray", lty = 2)
+
+# Legenda
+legend("topright", legend = c("Estimada", "Teórica"),
+       col = c("red", "blue"), lwd = 2, lty = c(1, 2), bg = "white")
+
+  
+```
+

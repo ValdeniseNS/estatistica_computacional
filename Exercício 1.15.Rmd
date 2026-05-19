@@ -1,0 +1,107 @@
+---
+title: "Exercícios da p. 44"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+```
+
+
+## Exercício 1.15. Implemente o algoritmo SIR para amostrar da distribuição Slash utilizando a distribuição t-Student com grau de liberdade pequeno.
+
+Resolução:
+
+Passos do SIR (Sampling-Importance Resampling)
+
+1. Escolha da distribuição proposta $g(y)$:
+
+Neste caso, usaremos uma distribuição $t$-Student com poucos graus de liberdade.
+
+2. Geração de amostras da proposta $g(y)$}:
+
+   $$
+   y_1, y_2, \dots, y_m \sim t_{\nu}
+   $$
+
+onde $\nu$ é o grau de liberdade da distribuição $t$-Student.
+
+3. Cálculo dos pesos de importância para cada amostra $y_i$}:
+
+   $$ 
+   p_i = \frac{f(y_i)}{g(y_i)} 
+   $$
+
+
+Onde:
+    $f(y)$ é a densidade da distribuição Slash, e
+    $g(y)$ é a densidade da distribuição $t$-Student.
+
+
+4. Normalização dos pesos para que somem 1:
+
+    $w_i = \frac{p_i}{\sum p_i}$
+
+
+5. Amostragem por reamostragem:
+
+Sorteamos $n$ valores de $y_i$ com probabilidade proporcional aos pesos normalizados $w_i$.
+
+Assim, aqui está a implementação do algoritmo SIR usando a distribuição t-Student como proposta para gerar da distribuição Slash.
+
+```{r }
+# Definição da densidade da distribuição Slash
+dslash <- function(x) {
+  return(2 * dnorm(x) * (1 - pnorm(abs(x))))
+}
+
+# Função para calcular os pesos SIR
+Pesos_SIR <- function(y, nu) {
+  df <- dslash(y)  # Densidade alvo (Slash)
+  dg <- dt(y, df = nu)  # Densidade proposta (t-Student com nu graus de liberdade)
+  p <- df / dg  # Pesos de importância
+  return(p / sum(p))  # Normalizando os pesos
+}
+
+# Função para gerar amostras da Slash usando SIR com proposta t-Student
+rslash_SIR <- function(n, m, nu) {
+  y <- rt(m, df = nu)  # Gerar m amostras da distribuição t-Student
+  pesos <- Pesos_SIR(y, nu)  # Calcular pesos normalizados
+  amostra <- sample(x = y, size = n, replace = TRUE, prob = pesos)  # Reamostragem com pesos
+  return(amostra)
+}
+```
+
+
+Testando a função com 1000 amostras
+
+```{r }
+# Testando a função com 1000 amostras
+set.seed(123)
+
+# Usando t-Student com 1 graus de liberdade como proposta:
+amostras_slash <- rslash_SIR(n = 1000, m = 5000, nu = 1)  
+
+# Ajustando `ylim` automaticamente com densidade estimada
+densidade_teorica <- density(amostras_slash)
+ylim_max <- max(densidade_teorica$y) + 0.5  # Ajuste automático do eixo Y
+
+# Criando o histograma da amostra gerada
+hist(amostras_slash, breaks = 30, probability = TRUE, col = "lightblue",
+     main = "Amostras da Slash via SIR (Proposta t-Student)",
+     ylab = "Densidade",
+     xlab = "Valores", 
+     ylim = c(0, ylim_max))
+
+# Adicionando a densidade teórica da Slash (se `dslash` estiver definida)
+curve(dslash(x), col = "red", lwd = 2, add = TRUE)
+
+```
+

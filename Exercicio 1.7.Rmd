@@ -1,0 +1,105 @@
+---
+title: "Exercícios da p. 19"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+```
+
+## Exercício 1.7. Reescreva a função do Exemplo 2.6 permitindo que os possíveis valores de X e as probabilidades sejam passadas como argumentos. Faça um estudo de simulação demonstrando a efetividade da função implementada para vários cenários de distribuições para variáveis categóricas.
+
+O Exemplo 2.6 trata da construção de um intervalo de confiança para a variância $(σ^2)$ de uma amostra aleatória extraída de uma distribuição normal X ~ N($μ,σ^2$).
+
+Vamos então assumir que em vez dos dados vêm de uma distribuição normal (como no exemplo), queremos permitir que os valores de 
+X sigam uma distribuição categórica arbitrária, onde os possíveis valores e suas probabilidades são fornecidos pelo usuário.
+
+vamos implementar a função que constrói o intervalo de confiança para $σ^2$, permitindo que os dados sigam distribuições categóricas definidas pelo usuário: 
+
+```{r cars}
+# Algoritmo de Fisher-Yates para gerar amostra categórica
+gerar_permutacao_fisher <- function(categorias, probs, n) {
+  amostra <- integer(n)  # Vetor para armazenar a amostra gerada
+
+  for (i in 1:n) {
+    u <- runif(1)  # Número aleatório Uniforme(0,1)
+    acumulada <- 0
+
+    for (j in seq_along(categorias)) {
+      acumulada <- acumulada + probs[j]
+      if (u <= acumulada) {
+        amostra[i] <- categorias[j]
+        break
+      }
+    }
+  }
+  
+  return(amostra)
+}
+
+# Função para calcular intervalo de confiança da variância
+calcula_ic_variancia_categorica <- function(valores, probs, n, alpha=0.05, replicas=1000) {
+  if (sum(probs) != 1) stop("A soma das probabilidades deve ser igual a 1.")
+
+  UCL <- replicate(replicas, {
+    x <- gerar_permutacao_fisher(valores, probs, n)  # Gerar amostra 
+    S2 <- var(x)  # Variância amostral
+    
+# Cálculo dos limites do intervalo de confiança
+limite_inferior <- (n-1) * S2 / qchisq(1 - alpha/2, df=n-1)
+limite_superior <- (n-1) * S2 / qchisq(alpha/2, df=n-1, lower.tail=TRUE)
+
+
+    c(limite_inferior, limite_superior)
+  })
+  
+  return(apply(UCL, 1, mean))  # Retorna a média dos limites inferior e superior
+}
+
+
+
+```
+
+Realizando um estudo de simulação para avaliar a cobertura do intervalo de confiança para diferentes distribuições categóricas.
+
+
+```{r }
+# Simulação com diferentes distribuições
+set.seed(123)
+n <- 20
+alpha <- 0.05
+replicas <- 10000
+
+valores1 <- c(1, 2, 3, 4, 5)
+probs1 <- rep(1/5, 5)
+ic1 <- calcula_ic_variancia_categorica(valores1, probs1, n, alpha, replicas)
+
+valores2 <- c(1, 2, 3, 10)
+probs2 <- c(0.2, 0.3, 0.3, 0.2)
+ic2 <- calcula_ic_variancia_categorica(valores2, probs2, n, alpha, replicas)
+
+valores3 <- c(0, 1)
+probs3 <- c(0.9, 0.1)
+ic3 <- calcula_ic_variancia_categorica(valores3, probs3, n, alpha, replicas)
+
+# Exibir os resultados 
+resultados <- data.frame(
+  Distribuicao = c("Uniforme Discreta", "Assimetrica", "Concentrada"),
+  Limite_Inferior = c(ic1[1], ic2[1], ic3[1]),
+  Limite_Superior = c(ic1[2], ic2[2], ic3[2])
+)
+
+
+print(resultados, row.names = FALSE)
+
+
+
+```
+
+
+A cobertura pode ser avaliada comparando os intervalos gerados com o verdadeiro valor da variância.

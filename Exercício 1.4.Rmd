@@ -1,0 +1,74 @@
+---
+title: "Exercícios da p. 19"
+author: "Valdenise Noberto dos Santos"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+
+```
+
+
+## Exercício 1.4. Implemente um algoritmo para fazer permutação utilizando o algoritmo para  gerar uma amostra de uma variável categórica. Não utilize a função sample do R.
+
+Algoritmo
+Passo 1: Seja $P_1, P_2, … , P_n$ uma permutação de $1, 2, … , n$;
+
+Passo 2: Faça $K = n$;
+
+Passo 3: Gere um número aleatório $I$ de uma uniforme discreta em $1, … , k$;
+
+Passo 4: Troque os valores de $P_I$ e $P_k$;
+
+Passo 5: Faça $k = k − 1$ e se $k > 1$ vá para o Passo 3.
+
+Passo 6: A nova ordenação $P_1, P_2, … , P_n$ é a ordenação desejada.
+
+
+
+```{r cars}
+gerar_permutacao_fisher_yates <- function(categorias) {
+  n <- length(categorias)  # Número total de elementos
+  
+  P <- categorias  # Copia o vetor original para evitar modificações diretas
+  k <- n  # Inicializa k com o tamanho do vetor
+
+  while (k > 1) {  # Enquanto k for maior que 1
+    I <- ceiling(runif(1, min = 1, max = k))  # Gera um índice aleatório entre 1 e k
+    
+    # Troca os elementos P[I] e P[k]
+    temp <- P[I]  # Armazena temporariamente o elemento P[I]
+    P[I] <- P[k]  # Substitui P[I] pelo elemento P[k]
+    P[k] <- temp  # P[k] recebe o elemento original de P[I]
+    
+    k <- k - 1  # Decrementa k (reduz o tamanho da parte não ordenada)
+  }
+  
+  return(P)  # Retorna o vetor permutado
+}
+
+
+```
+
+Onde: k começa no tamanho total da lista (n) e vai diminuindo até chegar a 1, garantindo que cada elemento seja trocado corretamente.
+
+Se não decrementássemos k, o loop não terminaria, pois ele ficaria sempre maior que 1. 
+
+E, temp é usado como variável auxiliar para não perdermos o valor original de P[I].
+
+Exemplo:
+
+```{r }
+# Exemplo de uso
+set.seed(42)  # Para garantir reprodutibilidade
+categorias <- c("A", "B", "C", "D", "E")
+permutacao <- gerar_permutacao_fisher_yates(categorias)
+print(permutacao)
+
+```
+
